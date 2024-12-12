@@ -3,10 +3,7 @@ import tempfile
 import subprocess
 import os
 import json
-import openai
 
-# OpenAI API 키 설정
-OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
 
 RANKING_FILE = 'ranking.json'
 
@@ -54,33 +51,6 @@ def get_pylint_score(code: str) -> float:
         return 0.0
     finally:
         os.remove(temp_path)
-
-
-def generate_code_review(code: str) -> str:
-    """
-    OpenAI의 GPT 모델을 사용하여 코드에 대한 리뷰를 생성합니다.
-
-    Parameters:
-        code (str): 리뷰할 코드.
-
-    Returns:
-        str: 생성된 코드 리뷰.
-    """
-    try:
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": "당신은 숙련된 소프트웨어 엔지니어입니다. 주어진 코드에 대한 상세한 리뷰를 작성해 주세요."},
-                {"role": "user", "content": f"다음은 파이썬 코드입니다. 코드의 장점과 개선할 점을 상세히 설명해 주세요.\n\n{code}"}
-            ],
-            max_tokens=500,
-            temperature=0,
-            openai_api_key=OPENAI_API_KEY
-        )
-        review = response.choices[0].message['content'].strip()
-        return review
-    except Exception as e:
-        return f"코드 리뷰 생성 중 오류가 발생했습니다: {e}"
 
 
 def update_rankings(rankings, developer, score):
@@ -150,7 +120,6 @@ def main():
             score_a = get_pylint_score(code_a)
             st.subheader(f"{dev_a}의 점수: {score_a:.2f}/10")
             rankings = update_rankings(rankings, dev_a, score_a)
-            review_a = generate_code_review(code_a)
         else:
             st.subheader(f"{dev_a}의 코드가 입력되지 않았습니다.")
 
@@ -158,7 +127,6 @@ def main():
             score_b = get_pylint_score(code_b)
             st.subheader(f"{dev_b}의 점수: {score_b:.2f}/10")
             rankings = update_rankings(rankings, dev_b, score_b)
-            review_b = generate_code_review(code_b)
         else:
             st.subheader(f"{dev_b}의 코드가 입력되지 않았습니다.")
 
@@ -179,7 +147,7 @@ def main():
         save_rankings(rankings)
 
         # 코드 리뷰 표시
-        st.markdown("### 코드 리뷰")
+        st.markdown("### 전문적인 코드 리뷰(유료)")
         if review_a:
             st.markdown(f"**{dev_a}의 코드 리뷰:**\n\n{review_a}")
         if review_b:
